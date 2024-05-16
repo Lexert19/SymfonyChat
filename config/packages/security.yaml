@@ -5,18 +5,17 @@ security:
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
        
     providers:
-        users:
+        app_user_provider:
             entity:
                 class: App\Entity\User
                 property: email
 
     firewalls:
-        dev:
-            pattern: ^/(_(profiler|wdt)|css|images|js)/
-            security: false
-        main:
+        login:
+            pattern: ^/auth/login
+            stateless: true
             json_login:
-                check_path: auth 
+                check_path: /auth/login_check
                 username_path: email
                 password_path: password
                 success_handler: lexik_jwt_authentication.handler.authentication_success
@@ -25,15 +24,22 @@ security:
         api:
             pattern: ^/api
             stateless: true
-            provider: users
             jwt: ~
+
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+
+        main:
+            lazy: true
+            provider: app_user_provider
 
      
     access_control:
-        - { path: ^/$, roles: PUBLIC_ACCESS } 
+        # - { path: ^/$, roles: PUBLIC_ACCESS } 
         - { path: ^/docs, roles: PUBLIC_ACCESS }
         - { path: ^/auth, roles: PUBLIC_ACCESS }
-        - { path: ^/, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 
 
 when@test:
