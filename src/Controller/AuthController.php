@@ -21,48 +21,6 @@ use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 #[Route('/auth', name: 'auth.')]
 class AuthController extends AbstractController
 {
-    private $userProvider;
-    private $jwtEncoder;
-    private $passwordHasher;
-    private $tokenManager;
-
-    public function __construct(
-        UserProvider $userProvider, 
-        JWTEncoderInterface $jwtEncoder, 
-        UserPasswordHasherInterface $passwordHasher,
-        JWTTokenManagerInterface $tokenManager)
-    {
-        $this->userProvider = $userProvider;
-        $this->jwtEncoder = $jwtEncoder;
-        $this->passwordHasher = $passwordHasher;
-        $this->tokenManager = $tokenManager;
-    }
-
-    #[Route('/login', name: 'login')]
-    public function login(Request $request): JsonResponse
-    {
-        $credentials = json_decode($request->getContent(), true);
-
-        try{
-            /** @var User $user */
-            $user = $this->userProvider->loadUserByIdentifier($credentials['email']);
-        }catch(Exception $e){
-            return $this->json(['message' => 'User not found'], 401);
-        }
-
-
-        if(!$this->isPasswordValid($credentials['password'], $user)){
-            return $this->json(['message' => 'Invalid password'], 401);
-        }
-
-        $token = $this->tokenManager->create($user);
-        #$token = $this->jwtEncoder->encode(['email' => $user->getEmail()]);
-
-        return new JsonResponse(['token' => $token]);
-    }
-
-
-
     #[Route('/register', name: 'register')]
     public function register(Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher)
     {
@@ -89,14 +47,4 @@ class AuthController extends AbstractController
 
         return $this->json(['message' => 'User registered successfully'], 201);
     }
-
-
-    private function isPasswordValid(string $plainPassword, PasswordAuthenticatedUserInterface $user): bool
-    {
-        return $this->passwordHasher->isPasswordValid($user, $plainPassword);
-    }
-    // private function isPasswordValid(string $plainPassword, string $hashedPassword){
-    //     $plainPassword = $passwordHasher->hashPassword($user, $plainPassword);
-    //     return $plainPassword === $hashedPassword;
-    // }
 }
